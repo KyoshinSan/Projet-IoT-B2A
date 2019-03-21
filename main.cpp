@@ -23,6 +23,8 @@
 I2C i2c(I2C1_SDA, I2C1_SCL);
 uint8_t lm75_adress = 0x48 << 1;
 
+AnalogIn   capteurHumidity(ADC_IN1);
+
 //function getTemperature()
 float getTemperature() {
 	char cmd[2];
@@ -34,11 +36,21 @@ float getTemperature() {
    	return temperature;
 }
 
+float getHumidity() {
+
+	// mesure du capteur dans l'eau
+	float humidity = capteurHumidity.read();
+	return humidity;
+
+	//appliqué la formule
+	// float measure_percent = (measure - air_value) * 100.0 / (water_value - air_value);
+}
+
 // Network interface
 NetworkInterface *net;
 
 int arrivedcount = 0;
-const char* topic = "/YNOV/messages";
+const char* topic = "TheoJonathan/feeds/projet-iot";
 
 /* Printf the message received and its configuration */
 
@@ -84,7 +96,7 @@ int main() {
     MQTT::Client<MQTTNetwork, Countdown> client(mqttNetwork);
 
     // Connect the socket to the MQTT Broker
-    const char* hostname = "fd9f:590a:b158:ffff:ffff::c0a8:0103";
+    const char* hostname = "io.adafruit.com";
     uint16_t port = 1883;
     printf("Connecting to %s:%d\r\n", hostname, port);
     int rc = mqttNetwork.connect(hostname, port);
@@ -95,8 +107,8 @@ int main() {
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
     data.MQTTVersion = 3;
     data.clientID.cstring = "mbed-sample";
-    //data.username.cstring = "testuser";
-    //data.password.cstring = "testpassword";
+    data.username.cstring = "TheoJonathan";
+    data.password.cstring = "f9382dde1e4f4c20b219f70fce53ae1f";
     if ((rc = client.connect(data)) != 0)
         printf("rc from MQTT connect is %d\r\n", rc);
 
@@ -109,7 +121,7 @@ int main() {
 
     // QoS 0
     char buf[100];
-    sprintf(buf, "Bonjour Theo ! Temperature : %f \r\n", getTemperature());
+    sprintf(buf, "La Commune de France ! Temperature : %f, Humidite : %f \r\n", getTemperature(), getHumidity());
 
     message.qos = MQTT::QOS0;
     message.retained = false;
