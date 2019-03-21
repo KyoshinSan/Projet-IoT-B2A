@@ -20,6 +20,8 @@
 #include "MQTTmbed.h"
 #include "MQTTClient.h"
 
+static DigitalOut led1 (LED1);
+
 I2C i2c(I2C1_SDA, I2C1_SCL);
 uint8_t lm75_adress = 0x48 << 1;
 
@@ -46,6 +48,10 @@ float getHumidity() {
 	// float measure_percent = (measure - air_value) * 100.0 / (water_value - air_value);
 }
 
+void flip_led() {
+	led1 !=led1;
+}
+
 // Network interface
 NetworkInterface *net;
 
@@ -57,6 +63,13 @@ const char* topic = "TheoJonathan/feeds/projet-iot";
 void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
+    if (strcmp((const char *)md.message.payload, "ON") == 0) {
+    	led1 = 1;
+    	printf("ON\n");
+    } else if (strcmp((const char *)md.message.payload, "OFF") == 0) {
+    	led1 = 0;
+    	printf("OFF\n");
+    }
     printf("Message arrived: qos %d, retained %d, dup %d, packetid %d\r\n", message.qos, message.retained, message.dup, message.id);
     printf("Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
     ++arrivedcount;
@@ -121,7 +134,8 @@ int main() {
 
     // QoS 0
     char buf[100];
-    sprintf(buf, "La Commune de France ! Temperature : %f, Humidite : %f \r\n", getTemperature(), getHumidity());
+    //sprintf(buf, "La Commune de France ! Temperature : %f, Humidite : %f \r\n", getTemperature(), getHumidity());
+    sprintf(buf, "%f\r\n", getTemperature());
 
     message.qos = MQTT::QOS0;
     message.retained = false;
@@ -129,12 +143,25 @@ int main() {
     message.payload = (void*)buf;
     message.payloadlen = strlen(buf)+1;
 
-    rc = client.publish(topic, message);
+    rc = client.publish("TheoJonathan/feeds/temperature", message);
+
+    sprintf(buf, "%f\r\n", getHumidity());
+
+    message.qos = MQTT::QOS0;
+    message.retained = false;
+    message.dup = false;
+    message.payload = (void*)buf;
+    message.payloadlen = strlen(buf)+1;
+
+    rc = client.publish("TheoJonathan/feeds/humidite", message);
+
 
     // yield function is used to refresh the connexion
     // Here we yield until we receive the message we sent
-    while (arrivedcount < 1)
+    while (true) {
         client.yield(100);
+        wait_ms(1000);
+    }
 
     // Disconnect client and socket
     client.disconnect();
