@@ -42,10 +42,11 @@ float getHumidity() {
 
 	// mesure du capteur dans l'eau
 	float humidity = capteurHumidity.read();
-	return humidity;
+	//return humidity;
 
 	//appliqué la formule
-	// float measure_percent = (measure - air_value) * 100.0 / (water_value - air_value);
+	float measure_percent = (humidity - 0) * 100.0 / (0.8 - 0);
+	return measure_percent;
 }
 
 void flip_led() {
@@ -63,13 +64,17 @@ const char* topic = "TheoJonathan/feeds/projet-iot";
 void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
-    if (strcmp((const char *)md.message.payload, "ON") == 0) {
+    int8_t result;
+    result = strcmp((const char *)md.message.payload, "ON");
+    printf("result : %d\n", result);
+    if (result >= 0) {
     	led1 = 1;
-    	printf("ON\n");
+    	printf("ON\r\n");
     } else if (strcmp((const char *)md.message.payload, "OFF") == 0) {
     	led1 = 0;
     	printf("OFF\n");
     }
+    printf("lenght : %d\n", message.payloadlen);
     printf("Message arrived: qos %d, retained %d, dup %d, packetid %d\r\n", message.qos, message.retained, message.dup, message.id);
     printf("Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
     ++arrivedcount;
@@ -118,7 +123,7 @@ int main() {
 
     // Connect the MQTT Client
     MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-    data.MQTTVersion = 3;
+    data.MQTTVersion = 4;
     data.clientID.cstring = "mbed-sample";
     data.username.cstring = "TheoJonathan";
     data.password.cstring = "f9382dde1e4f4c20b219f70fce53ae1f";
@@ -134,33 +139,32 @@ int main() {
 
     // QoS 0
     char buf[100];
-    //sprintf(buf, "La Commune de France ! Temperature : %f, Humidite : %f \r\n", getTemperature(), getHumidity());
-    sprintf(buf, "%f\r\n", getTemperature());
-
-    message.qos = MQTT::QOS0;
-    message.retained = false;
-    message.dup = false;
-    message.payload = (void*)buf;
-    message.payloadlen = strlen(buf)+1;
-
-    rc = client.publish("TheoJonathan/feeds/temperature", message);
-
-    sprintf(buf, "%f\r\n", getHumidity());
-
-    message.qos = MQTT::QOS0;
-    message.retained = false;
-    message.dup = false;
-    message.payload = (void*)buf;
-    message.payloadlen = strlen(buf)+1;
-
-    rc = client.publish("TheoJonathan/feeds/humidite", message);
-
 
     // yield function is used to refresh the connexion
     // Here we yield until we receive the message we sent
+
     while (true) {
-        client.yield(100);
-        wait_ms(1000);
+    	sprintf(buf, "%f\r\n", getTemperature());
+
+    	message.qos = MQTT::QOS0;
+        message.retained = false;
+        message.dup = false;
+        message.payload = (void*)buf;
+        message.payloadlen = strlen(buf)+1;
+
+   	    rc = client.publish("TheoJonathan/feeds/temperature", message);
+
+   	    sprintf(buf, "%f\r\n", getHumidity());
+
+   	    message.qos = MQTT::QOS0;
+    	message.retained = false;
+    	message.dup = false;
+        message.payload = (void*)buf;
+   	    message.payloadlen = strlen(buf)+1;
+
+   	    rc = client.publish("TheoJonathan/feeds/humidite", message);
+   	    client.yield(100);
+        wait_ms(5000);
     }
 
     // Disconnect client and socket
