@@ -152,18 +152,18 @@ int main() {
         message.payload = (void*)buf;
         message.payloadlen = strlen(buf)+1;
 
-   	    rc = client.publish("TheoJonathan/feeds/temperature", message);
+   	rc = client.publish("TheoJonathan/feeds/temperature", message);
 
-   	    sprintf(buf, "%f\r\n", getHumidity());
+   	sprintf(buf, "%f\r\n", getHumidity());
 
-   	    message.qos = MQTT::QOS0;
+   	message.qos = MQTT::QOS0;
     	message.retained = false;
     	message.dup = false;
         message.payload = (void*)buf;
-   	    message.payloadlen = strlen(buf)+1;
+   	message.payloadlen = strlen(buf)+1;
 
-   	    rc = client.publish("TheoJonathan/feeds/humidite", message);
-   	    client.yield(100);
+   	rc = client.publish("TheoJonathan/feeds/humidite", message);
+   	client.yield(100);
         wait_ms(5000);
     }
 
