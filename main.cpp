@@ -57,7 +57,7 @@ void flip_led() {
 NetworkInterface *net;
 
 int arrivedcount = 0;
-const char* topic = "TheoJonathan/feeds/projet-iot";
+const char* topic = "TheoJonathan/feeds/led";
 
 /* Printf the message received and its configuration */
 
